@@ -1,9 +1,6 @@
-# AI-Powered Financial Assistant
+# AI-Powered Financial Assistan
 
-<div align="center">
-  <img src="media/CoyaminAI.png" alt="Finance AI "/>
-  <p><em>Your AI-powered financial companion</em></p>
-</div>
+![Finance AI](media/CoyaminAI.png)
 
 An AI-powered financial application that helps you understand and optimize your personal finances. Built with Next.js, CopilotKit for AI assistance, and Maybe Finance API for financial data.
 
