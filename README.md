@@ -1,4 +1,4 @@
-# AI-Powered Financial Assistan
+# AI-Powered Financial Assistant
 
 ![Finance AI](media/CoyaminAI.png)
 
