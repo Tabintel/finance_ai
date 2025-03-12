@@ -1,7 +1,7 @@
 # AI-Powered Financial Assistant
 
 <div align="center">
-  <img src="media/CoyaminAI.png" alt="Coyamin AI " width="250" />
+  <img src="media/CoyaminAI.png" alt="Finance AI "/>
   <p><em>Your AI-powered financial companion</em></p>
 </div>
 
