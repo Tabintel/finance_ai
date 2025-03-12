@@ -1,0 +1,214 @@
+openapi: 3.0.0
+info:
+  title: COYAMIN API for integrating with SyncFinanance
+  description: API to fetch historical exchange rates for specified currencies.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+paths:
+  /enrich:
+    get:
+      summary: Enrich financial transaction details
+      description: Fetches financial insights based on transaction details like description, amount, city, state, and country.
+      parameters:
+        - name: description
+          in: query
+          required: true
+          description: The transaction description from the bank statement.
+          schema:
+            type: string
+            example: "AMZN Mktp US"
+        - name: amount
+          in: query
+          required: true
+          description: The transaction amount.
+          schema:
+            type: integer
+            example: 2000
+        - name: city
+          in: query
+          required: true
+          description: The city where the transaction took place.
+          schema:
+            type: string
+            example: "New York"
+        - name: state
+          in: query
+          required: true
+          description: The state where the transaction took place.
+          schema:
+            type: string
+            example: "NY"
+        - name: country
+          in: query
+          required: true
+          description: The country where the transaction took place.
+          schema:
+            type: string
+            example: "USA"
+      responses:
+        "200":
+          description: Successful response with enriched transaction details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  merchant:
+                    type: string
+                    example: "Amazon"
+                  category:
+                    type: string
+                    example: "Online Shopping"
+                  location:
+                    type: object
+                    properties:
+                      city:
+                        type: string
+                        example: "New York"
+                      state:
+                        type: string
+                        example: "NY"
+                      country:
+                        type: string
+                        example: "USA"
+        "400":
+          description: Bad request due to missing parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Missing required query parameters: description, city, state, country, and amount"
+        "500":
+          description: Internal server error or API failure.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error fetching financial insights"
+                  error:
+                    type: string
+                    example: "Request failed with status code 500"
+
+  /rate/historical-rate:
+    get:
+      summary: Get historical exchange rates
+      description: Fetch historical exchange rates for specified currencies.
+      parameters:
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "EUR,GBP"
+          description: Comma-separated list of target currencies.
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+            example: "2024-02-10"
+          description: Specific historical date (YYYY-MM-DD). Defaults to the latest available.
+      responses:
+        "200":
+          description: Successful response with exchange rate data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base_currency:
+                    type: string
+                    example: "USD"
+                  rates:
+                    type: object
+                    properties:
+                      EUR:
+                        type: number
+                        example: 0.92
+                      GBP:
+                        type: number
+                        example: 0.78
+        "400":
+          description: Bad request due to missing or incorrect parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Missing required query parameter: to"
+        "500":
+          description: Server error while fetching rates.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error fetching historical rates"
+
+  /rates/live:
+    get:
+      summary: Get Live historical rates
+      description: Fetch historical exchange rates for specified currencies.
+      parameters:
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "EUR,GBP"
+          description: Comma-separated list of target currencies.
+      responses:
+        "200":
+          description: Successful response with exchange rate data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  base_currency:
+                    type: string
+                    example: "USD"
+                  rates:
+                    type: object
+                    properties:
+                      EUR:
+                        type: number
+                        example: 0.92
+                      GBP:
+                        type: number
+                        example: 0.78
+        "400":
+          description: Bad request due to missing or incorrect parameters.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Missing required query parameter: to"
+        "500":
+          description: Server error while fetching rates.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error fetching historical rates"
