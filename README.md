@@ -1,6 +1,6 @@
 # AI-Powered Financial Assistant
 
-![Finance AI](media/CoyaminAI.png)
+![finance app](https://github.com/user-attachments/assets/0e08a55d-8880-4711-bc8d-b4f24c1a370f)
 
 An AI-powered financial application that helps you understand and optimize your personal finances. Built with Next.js, CopilotKit for AI assistance, and Maybe Finance API for financial data.
 
