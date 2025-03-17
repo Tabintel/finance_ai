@@ -1,7 +1,7 @@
 "use client";
 
 import { CopilotSidebar } from "@copilotkit/react-ui";
-import { useCopilotAction, useCopilotContext } from "@copilotkit/react-core";
+import { useCopilotAction } from "@copilotkit/react-core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -17,139 +17,245 @@ import {
 } from "recharts";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-
-const chartData = [
-  { name: "Jan", value: 4000 },
-  { name: "Feb", value: 3000 },
-  { name: "Mar", value: 2000 },
-  { name: "Apr", value: 2780 },
-  { name: "May", value: 1890 },
-  { name: "Jun", value: 2390 },
-];
-
-const pieData = [
-  { name: "Stocks", value: 400 },
-  { name: "Bonds", value: 300 },
-  { name: "Real Estate", value: 300 },
-  { name: "Crypto", value: 200 },
-];
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [currencies, setCurrencies] = useState([]);
-  const [rates, setRates] = useState({});
-  const [userPreferences, setUserPreferences] = useState(null);
   
-  // Fetch financial data
-  useEffect(() => {
-    // Get user preferences from localStorage
-    const storedPrefs = localStorage.getItem("userPreferences");
-    if (storedPrefs) {
-      setUserPreferences(JSON.parse(storedPrefs));
-    }
-    
-    // Fetch currencies
-    fetch('/api/currencies')
-      .then(res => res.json())
-      .then(data => {
-        setCurrencies(data.currencies || []);
-      })
-      .catch(err => console.error('Error fetching currencies:', err));
-      
-    // Fetch exchange rates
-    fetch('/api/rates/live')
-      .then(res => res.json())
-      .then(data => {
-        setRates(data.quotes || {});
-      })
-      .catch(err => console.error('Error fetching rates:', err));
-  }, []);
+  // State for modifiable financial data
+  const [totalBalance, setTotalBalance] = useState(45231.89);
+  const [investments, setInvestments] = useState(32123.45);
+  const [monthlySavings, setMonthlySavings] = useState(2400.00);
+  const [riskScore, setRiskScore] = useState(7.2);
   
-  // Define CopilotKit actions
-  useCopilotAction({
-    name: "getPortfolioSummary",
-    description: "Get the user's current portfolio summary and balances",
-    parameters: [],
-    handler: async () => {
-      return {
-        totalBalance: "$45,231.89",
-        investments: "$32,123.45",
-        monthlySavings: "$2,400.00",
-        riskScore: "7.2/10",
-      };
-    }
-  });
+  // Format functions to display numbers with commas
+  const formatCurrency = (value) => {
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
   
-  useCopilotAction({
-    name: "getExchangeRates",
-    description: "Get current exchange rates for major currencies",
-    parameters: [],
-    handler: async () => {
-      return rates;
-    }
-  });
+  const formatRisk = (value) => {
+    return value.toFixed(1);
+  };
   
-  useCopilotAction({
-    name: "getUserPreferences",
-    description: "Get the user's financial preferences and goals",
-    parameters: [],
-    handler: async () => {
-      return userPreferences || {
-        financialGoals: [],
-        riskTolerance: "Not specified",
-        investmentPreferences: []
-      };
-    }
-  });
+  // State for chart data
+  const [chartData, setChartData] = useState([
+    { name: "Jan", value: 4000 },
+    { name: "Feb", value: 3000 },
+    { name: "Mar", value: 2000 },
+    { name: "Apr", value: 2780 },
+    { name: "May", value: 1890 },
+    { name: "Jun", value: 2390 },
+  ]);
   
-  useCopilotAction({
-    name: "getAssetAllocation",
-    description: "Get the user's current asset allocation",
-    parameters: [],
-    handler: async () => {
-      return pieData;
-    }
-  });
+  // State for pie data
+  const [pieData, setPieData] = useState([
+    { name: "Stocks", value: 400 },
+    { name: "Bonds", value: 300 },
+    { name: "Real Estate", value: 300 },
+    { name: "Crypto", value: 200 },
+  ]);
+  
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-  // Rich context for the AI
-  const contextString = `
-    USER CONTEXT:
-    - User: ${session?.user?.name || "User"}
-    - Financial Goals: ${userPreferences?.financialGoals?.join(", ") || "Not specified"}
-    - Risk Tolerance: ${userPreferences?.riskTolerance || "Not specified"}
-    - Investment Preferences: ${userPreferences?.investmentPreferences?.join(", ") || "Not specified"}
+ // Action to update total balance
+useCopilotAction({
+  name: "updateTotalBalance",
+  description: "Update the user's total financial balance",
+  parameters: [
+    { name: "amount", type: "number", description: "New balance amount" }
+  ],
+  handler: async (amount) => {
+    console.log("updateTotalBalance called with:", amount, "type:", typeof amount);
     
-    PORTFOLIO DATA:
-    - Total Balance: $45,231.89
-    - Investments: $32,123.45
-    - Monthly Savings: $2,400.00
-    - Risk Score: 7.2/10
+    // Handle if amount is an object with amount property
+    let numericAmount;
+    if (typeof amount === 'object' && amount !== null && 'amount' in amount) {
+      numericAmount = Number(amount.amount);
+      console.log("Extracted amount from object:", numericAmount);
+    } else {
+      numericAmount = Number(amount);
+    }
     
-    ASSET ALLOCATION:
-    - Stocks: 33%
-    - Bonds: 25%
-    - Real Estate: 25%
-    - Crypto: 17%
+    if (isNaN(numericAmount)) {
+      console.error("Invalid amount format:", amount);
+      return { success: false, error: "Invalid amount format" };
+    }
     
-    AVAILABLE ACTIONS:
-    - Get portfolio summary
-    - Get exchange rates
-    - Get user preferences
-    - Get asset allocation
+    setTotalBalance(numericAmount);
+    return { 
+      success: true, 
+      message: `Total balance updated to $${formatCurrency(numericAmount)}` 
+    };
+  }
+});
+
+// Action to update investments
+useCopilotAction({
+  name: "updateInvestments",
+  description: "Update the user's investment amount",
+  parameters: [
+    { name: "amount", type: "number", description: "New investment amount" }
+  ],
+  handler: async (amount) => {
+    console.log("updateInvestments called with:", amount, "type:", typeof amount);
     
-    The user can ask questions about their financial situation, get investment advice based on their risk profile,
-    analyze their current portfolio, and receive personalized savings strategies.
-  `;
+    // Handle if amount is an object with amount property
+    let numericAmount;
+    if (typeof amount === 'object' && amount !== null && 'amount' in amount) {
+      numericAmount = Number(amount.amount);
+      console.log("Extracted amount from object:", numericAmount);
+    } else {
+      numericAmount = Number(amount);
+    }
+    
+    if (isNaN(numericAmount)) {
+      console.error("Invalid amount format:", amount);
+      return { success: false, error: "Invalid amount format" };
+    }
+    
+    setInvestments(numericAmount);
+    return { 
+      success: true, 
+      message: `Investments updated to $${formatCurrency(numericAmount)}` 
+    };
+  }
+});
+
+// Action to update monthly savings
+useCopilotAction({
+  name: "updateMonthlySavings",
+  description: "Update the user's monthly savings amount",
+  parameters: [
+    { name: "amount", type: "number", description: "New monthly savings amount" }
+  ],
+  handler: async (amount) => {
+    console.log("updateMonthlySavings called with:", amount, "type:", typeof amount);
+    
+    // Handle if amount is an object with amount property
+    let numericAmount;
+    if (typeof amount === 'object' && amount !== null && 'amount' in amount) {
+      numericAmount = Number(amount.amount);
+      console.log("Extracted amount from object:", numericAmount);
+    } else {
+      numericAmount = Number(amount);
+    }
+    
+    if (isNaN(numericAmount)) {
+      console.error("Invalid amount format:", amount);
+      return { success: false, error: "Invalid amount format" };
+    }
+    
+    setMonthlySavings(numericAmount);
+    return { 
+      success: true, 
+      message: `Monthly savings updated to $${formatCurrency(numericAmount)}` 
+    };
+  }
+});
+
+// Action to update risk score
+useCopilotAction({
+  name: "updateRiskScore",
+  description: "Update the user's risk tolerance score (1-10 scale)",
+  parameters: [
+    { name: "score", type: "number", description: "New risk score (1-10)" }
+  ],
+  handler: async (score) => {
+    console.log("updateRiskScore called with:", score, "type:", typeof score);
+    
+    // Handle if score is an object with score property
+    let numericScore;
+    if (typeof score === 'object' && score !== null && 'score' in score) {
+      numericScore = Number(score.score);
+      console.log("Extracted score from object:", numericScore);
+    } else {
+      numericScore = Number(score);
+    }
+    
+    if (isNaN(numericScore) || numericScore < 1 || numericScore > 10) {
+      console.error("Invalid risk score:", score);
+      return { success: false, error: "Risk score must be between 1 and 10" };
+    }
+    
+    setRiskScore(numericScore);
+    
+    let riskProfile = "Low";
+    if (numericScore > 3 && numericScore <= 7) {
+      riskProfile = "Moderate";
+    } else if (numericScore > 7) {
+      riskProfile = "High";
+    }
+    
+    return { 
+      success: true, 
+      message: `Risk score updated to ${formatRisk(numericScore)}/10 (${riskProfile} risk profile)` 
+    };
+  }
+});
+
   
+// Rich context for the AI
+const contextString = `
+  USER CONTEXT:
+  - User: ${session?.user?.name || "User"}
+  
+  PORTFOLIO DATA:
+  - Total Balance: $${typeof totalBalance === 'object' ? 
+      formatCurrency(totalBalance.amount || 0) : 
+      formatCurrency(totalBalance)}
+  - Investments: $${typeof investments === 'object' ? 
+      formatCurrency(investments.amount || 0) : 
+      formatCurrency(investments)}
+  - Monthly Savings: $${typeof monthlySavings === 'object' ? 
+      formatCurrency(monthlySavings.amount || 0) : 
+      formatCurrency(monthlySavings)}
+  - Risk Score: ${typeof riskScore === 'object' ? 
+      formatRisk(riskScore.score || 0) : 
+      formatRisk(riskScore)}/10
+  
+  ASSET ALLOCATION:
+  - Stocks: ${Math.round(pieData[0].value / pieData.reduce((a, b) => a + b.value, 0) * 100)}%
+  - Bonds: ${Math.round(pieData[1].value / pieData.reduce((a, b) => a + b.value, 0) * 100)}%
+  - Real Estate: ${Math.round(pieData[2].value / pieData.reduce((a, b) => a + b.value, 0) * 100)}%
+  - Crypto: ${Math.round(pieData[3].value / pieData.reduce((a, b) => a + b.value, 0) * 100)}%
+  
+  AVAILABLE ACTIONS:
+  - updateTotalBalance(amount: number) - Update the total balance
+  - updateInvestments(amount: number) - Update investments
+  - updateMonthlySavings(amount: number) - Update monthly savings
+  - updateRiskScore(score: number) - Update risk score (1-10)
+  
+  Example: To update investments to $50,000, use updateInvestments(50000)
+`;
+
+
+
+useEffect(() => {
+  console.log("State values:", {
+    totalBalance: typeof totalBalance, 
+    investments: typeof investments,
+    monthlySavings: typeof monthlySavings,
+    riskScore: typeof riskScore
+  });
+  
+  // Check for object values that might cause rendering issues
+  if (typeof totalBalance === 'object') console.error("totalBalance is an object:", totalBalance);
+  if (typeof investments === 'object') console.error("investments is an object:", investments);
+  if (typeof monthlySavings === 'object') console.error("monthlySavings is an object:", monthlySavings);
+  if (typeof riskScore === 'object') console.error("riskScore is an object:", riskScore);
+}, [totalBalance, investments, monthlySavings, riskScore]);
+
+
   return (
     <CopilotSidebar
       defaultOpen={true}
       instructions={contextString}
       labels={{
         title: "Finance AI Assistant",
-        initial: "How can I help you today? You can ask about your portfolio, get investment advice, or explore savings strategies tailored to your financial goals.",
+        initial: "How can I help you today? You can ask about your portfolio, get investment advice, or make changes to your financial data.",
       }}
     >
       <div className="flex flex-col">
@@ -171,7 +277,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm">Total Balance</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl sm:text-4xl font-bold">$45,231.89</div>
+                <div className="text-2xl sm:text-4xl font-bold">${totalBalance}</div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   +20.1% from last month
                 </p>
@@ -182,7 +288,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm">Investments</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl sm:text-4xl font-bold">$32,123.45</div>
+                <div className="text-2xl sm:text-4xl font-bold">${investments}</div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   78 active positions
                 </p>
@@ -193,7 +299,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm">Monthly Savings</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl sm:text-4xl font-bold">$2,400.00</div>
+                <div className="text-2xl sm:text-4xl font-bold">${monthlySavings}</div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   +12% from last month
                 </p>
@@ -204,9 +310,9 @@ export default function DashboardPage() {
                 <CardTitle className="text-sm">Risk Score</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl sm:text-4xl font-bold">7.2/10</div>
+                <div className="text-2xl sm:text-4xl font-bold">{riskScore}/10</div>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Moderate risk profile
+                  {parseFloat(riskScore) <= 3 ? "Low" : parseFloat(riskScore) <= 7 ? "Moderate" : "High"} risk profile
                 </p>
               </CardContent>
             </Card>
