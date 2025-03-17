@@ -29,7 +29,7 @@ export default function OnboardingChat() {
     {
       type: "bot",
       content:
-        "Welcome to Coyamin! I'm your AI Investment & Savings Copilot. Let's set up your financial profile. What are your main financial goals?",
+        "Welcome to Finance AI! I'm your AI Investment & Savings Assistant. Let's set up your financial profile. What are your main financial goals?",
       options: [
         "Short-term savings (1-2 years)",
         "Long-term investments (5+ years)",
@@ -120,10 +120,20 @@ export default function OnboardingChat() {
 
         const data = await response.json();
 
+        // Immediately after completing onboarding
         if (response.ok) {
           // Update the session client-side
-          await update({ isOnboarded: true });
-          router.push("/dashboard");
+          await update({ user: { ...session?.user, isOnboarded: true } });
+          
+          // Set a local flag that can be checked by middleware
+          localStorage.setItem("isOnboarded", "true");
+          
+          router.replace("/dashboard");
+          
+          // Reload the page after a short delay to ensure fresh token
+          setTimeout(() => {
+            window.location.href = "/dashboard";
+          }, 1000);
         } else {
           console.error("Onboarding failed:", data.error);
         }
@@ -135,7 +145,7 @@ export default function OnboardingChat() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       {/* Header */}
       <header className="bg-blue-600 text-white py-4 px-6 flex items-center justify-between shadow-md">
-        <h1 className="text-lg font-semibold">Coyamin Onboarding</h1>
+        <h1 className="text-lg font-semibold">Finance AI Onboarding</h1>
         <Sparkles size={24} />
       </header>
 
