@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: COYAMIN API for integrating with SyncFinanance
+  title: Finance AI API for integrating with SyncFinanance
   description: API to fetch historical exchange rates for specified currencies.
   version: 1.0.0
 

@@ -10,9 +10,10 @@ export async function middleware(req: NextRequest) {
   const isOnboardingPage = req.nextUrl.pathname === "/onboarding";
   const isDashboardPage = req.nextUrl.pathname.startsWith("/dashboard");
 
-  if (!token.isOnboarded && isDashboardPage) {
-    return NextResponse.redirect(new URL("/onboarding", req.url));
-  }
+  // Comment out this redirection check temporarily
+  // if (!token.isOnboarded && isDashboardPage) {
+  //   return NextResponse.redirect(new URL("/onboarding", req.url));
+  // }
 
   if (token.isOnboarded && isOnboardingPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
